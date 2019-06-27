@@ -37,55 +37,99 @@
 
 #include "uart.h"
 #include "timer.h"
+#include "b3m.h"
 #include "resource_table_0.h"
 
-
+#define TRUE 1
+#define FALSE 0
 
 
 void main(void) {
 
-	uint8_t *uart_buffer;
+	uint8_t buffer[25];
+	uint8_t recv_len;
+	uint8_t expect_reply;
 
 	// Set to FREE MODE
-	uint8_t packet1[]={0x08, 0x04, 0x00, 0x00, 0x02, 0x28, 0x01, 0x37};
+	uint8_t pkt1[]={0x08, 0x04, 0x00, 0x00, 0x02, 0x28, 0x01, 0x37};
 
 	// Set to VELOCITY CONTROL MODE
-	uint8_t packet2[]={0x08, 0x04, 0x00, 0x00, 0x06, 0x28, 0x01, 0x3B};
+	uint8_t pkt2[]={0x08, 0x04, 0x00, 0x00, 0x06, 0x28, 0x01, 0x3B};
 
 	// Set the GAIN PRESETS
-	uint8_t packet3[]={0x08, 0x04, 0x00, 0x00, 0x01, 0x5c, 0x01, 0x6A};
+	uint8_t pkt3[]={0x08, 0x04, 0x00, 0x00, 0x01, 0x5c, 0x01, 0x6A};
 
 	// Set to NORMAL MODE
-	uint8_t packet4[]={0x08, 0x04, 0x00, 0x00, 0x04, 0x28, 0x01, 0x39};
+	uint8_t pkt4[]={0x08, 0x04, 0x00, 0x00, 0x04, 0x28, 0x01, 0x39};
 
 	// Set the VELOCITY
-	uint8_t packet5[]={0x09, 0x04, 0x00, 0x00, 0x10, 0x27, 0x30, 0x01, 0x75};
+	uint8_t pkt5[]={0x09, 0x04, 0x00, 0x00, 0x10, 0x27, 0x30, 0x01, 0x75};
 
 	// Set the VELOCITY (set to 0 velocity)
-	uint8_t packet6[]={0x09, 0x04, 0x00, 0x00, 0x00, 0x00, 0x30, 0x01, 0x3E};
+	uint8_t pkt6[]={0x09, 0x04, 0x00, 0x00, 0x00, 0x00, 0x30, 0x01, 0x3E};
 
 
 
 	/* Initialisation */
 	UARTInit();
 
-	UARTSend(packet1, packet1[0]);// FREE MODE
+
+	UARTSend(pkt1, pkt1[0]); // FREE MODE
+	expect_reply = TRUE;
+	if(expect_reply){
+		recv_len = 0x05;
+		UARTReceive(buffer, recv_len, 3);
+		verify_response(pkt1,  buffer, recv_len);
+	}
 
 	wait(5000);
-	UARTSend(packet2, packet2[0]); // VELOCITY CONTROL
+	UARTSend(pkt2, pkt2[0]); // VELOCITY CONTROL
+	expect_reply = TRUE;
+	if(expect_reply){
+		recv_len = 0x05;
+		UARTReceive(buffer, recv_len, 3);
+		verify_response(pkt2, buffer, recv_len);
+	}
 
 	wait(5000);
-	UARTSend(packet3, packet3[0]); // GAIN PRESET 2
+	UARTSend(pkt3, pkt3[0]); // GAIN PRESET 1
+	expect_reply = TRUE;
+	if(expect_reply){
+		recv_len = 0x05;
+		UARTReceive(buffer, recv_len, 3);
+		verify_response(pkt3, buffer, recv_len);
+
+	}
 
 	wait(5000);
-	UARTSend(packet4, packet4[0]); // NORMAL MODE
+	UARTSend(pkt4, pkt4[0]); // NORMAL MODE
+	expect_reply = TRUE;
+	if(expect_reply){
+		recv_len = 0x05;
+		UARTReceive(buffer, recv_len, 3);
+		verify_response(pkt4, buffer, recv_len);
+	}
 
 	while(1) { // Toggle between RUNNING and STOP
 		wait(50000000);
-		UARTSend(packet5, packet5[0]); // RUN 
+		UARTSend(pkt5, pkt5[0]); // RUN
+		expect_reply = TRUE;
+		if(expect_reply) {
+			recv_len = 0x05;
+			UARTReceive(buffer, recv_len, 3);
+			verify_response(pkt5, buffer, recv_len);
+
+		}
 
 		wait(50000000);	
-		UARTSend(packet6, packet6[0]); // STOP (0 velocity)
+		UARTSend(pkt6, pkt6[0]); // STOP (0 velocity)
+		expect_reply = TRUE;
+		if(expect_reply) {
+			recv_len = 0x05;
+			UARTReceive(buffer, recv_len, 3);
+			verify_response(pkt6, buffer, recv_len);
+		}
+
 	}
 
 	UARTClose();

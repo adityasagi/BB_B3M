@@ -24,7 +24,7 @@ define ERROR_BODY_SP
 
 *******************************************************************************
 PRU_SOFTWARE_PACKAGE environment variable is not set. Examples given:
-(ARM Linux*) export PRU_SOFTWARE_PACKAGE=/usr/lib/ti/pru-software-support-package/
+(ARM Linux*) export PRU_SOFTWARE_PACKAGE=/usr/lib/ti/pru-software-support-package
 
 *******************************************************************************
 
