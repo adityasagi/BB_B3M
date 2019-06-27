@@ -38,10 +38,13 @@
 #include "uart.h"
 #include "timer.h"
 #include "b3m.h"
-#include "resource_table_0.h"
+#include "rpmsg.h"
+#include "gpio.h"
 
 #define TRUE 1
 #define FALSE 0
+
+uint8_t payload[RPMSG_BUF_SIZE];
 
 
 void main(void) {
@@ -50,92 +53,35 @@ void main(void) {
 	uint8_t recv_len;
 	uint8_t expect_reply;
 
-	// Set to FREE MODE
-	uint8_t pkt1[]={0x08, 0x04, 0x00, 0x00, 0x02, 0x28, 0x01, 0x37};
-
-	// Set to VELOCITY CONTROL MODE
-	uint8_t pkt2[]={0x08, 0x04, 0x00, 0x00, 0x06, 0x28, 0x01, 0x3B};
-
-	// Set the GAIN PRESETS
-	uint8_t pkt3[]={0x08, 0x04, 0x00, 0x00, 0x01, 0x5c, 0x01, 0x6A};
-
-	// Set to NORMAL MODE
-	uint8_t pkt4[]={0x08, 0x04, 0x00, 0x00, 0x04, 0x28, 0x01, 0x39};
-
-	// Set the VELOCITY
-	uint8_t pkt5[]={0x09, 0x04, 0x00, 0x00, 0x10, 0x27, 0x30, 0x01, 0x75};
-
-	// Set the VELOCITY (set to 0 velocity)
-	uint8_t pkt6[]={0x09, 0x04, 0x00, 0x00, 0x00, 0x00, 0x30, 0x01, 0x3E};
-
-
+	struct pru_rpmsg_transport transport;
+	uint16_t src, dst, len;
 
 	/* Initialisation */
 	UARTInit();
 
+	RPMsgInit(&transport);
 
-	UARTSend(pkt1, pkt1[0]); // FREE MODE
-	expect_reply = TRUE;
-	if(expect_reply){
-		recv_len = 0x05;
-		UARTReceive(buffer, recv_len, 3);
-		verify_response(pkt1,  buffer, recv_len);
-	}
+	/* Task loop */
+	while(1) {
+		if(RPMsgRecv(&transport, &src, &dst, payload, &len)==0) {
 
-	wait(5000);
-	UARTSend(pkt2, pkt2[0]); // VELOCITY CONTROL
-	expect_reply = TRUE;
-	if(expect_reply){
-		recv_len = 0x05;
-		UARTReceive(buffer, recv_len, 3);
-		verify_response(pkt2, buffer, recv_len);
-	}
-
-	wait(5000);
-	UARTSend(pkt3, pkt3[0]); // GAIN PRESET 1
-	expect_reply = TRUE;
-	if(expect_reply){
-		recv_len = 0x05;
-		UARTReceive(buffer, recv_len, 3);
-		verify_response(pkt3, buffer, recv_len);
-
-	}
-
-	wait(5000);
-	UARTSend(pkt4, pkt4[0]); // NORMAL MODE
-	expect_reply = TRUE;
-	if(expect_reply){
-		recv_len = 0x05;
-		UARTReceive(buffer, recv_len, 3);
-		verify_response(pkt4, buffer, recv_len);
-	}
-
-	while(1) { // Toggle between RUNNING and STOP
-		wait(50000000);
-		UARTSend(pkt5, pkt5[0]); // RUN
-		expect_reply = TRUE;
-		if(expect_reply) {
-			recv_len = 0x05;
-			UARTReceive(buffer, recv_len, 3);
-			verify_response(pkt5, buffer, recv_len);
-
+			UARTSend(payload, payload[0]); 
+			expect_reply = TRUE;
+			if(expect_reply){
+				recv_len = 0x05;
+				UARTReceive(buffer, recv_len, 3);
+				verify_response(payload,  buffer, recv_len);
+				RPMsgSend(&transport, dst, src, buffer, recv_len);
+				debug_lights(10);	
+			}
 		}
-
-		wait(50000000);	
-		UARTSend(pkt6, pkt6[0]); // STOP (0 velocity)
-		expect_reply = TRUE;
-		if(expect_reply) {
-			recv_len = 0x05;
-			UARTReceive(buffer, recv_len, 3);
-			verify_response(pkt6, buffer, recv_len);
-		}
-
 	}
-
-	UARTClose();
 
 
 
 	/* Halt PRU core */
 	__halt();
+
+
 }
+
