@@ -11,13 +11,13 @@ void verify_response(uint8_t *pkt, uint8_t *resp, uint8_t len) {
 	// Verify the length of the received data
 	if(resp_len != len) {
 		debug_lights(20);
-		while(1){};
+		//while(1){};
 	}
 
 	// Verify the response command
 	if(resp[1] != (pkt[1] | 0x80)) {
 		debug_lights(5);
-		while(1){};
+		//while(1){};
 	}
 
 	// Calculate the checksum
@@ -29,7 +29,7 @@ void verify_response(uint8_t *pkt, uint8_t *resp, uint8_t len) {
 	// Verify the checksum
 	if(sum != resp[len-1]){
 		debug_lights(100);
-		while(1){};
+		//while(1){};
 	}
 
 	// If all is well, return

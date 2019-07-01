@@ -89,7 +89,9 @@ uint8_t UARTSend(uint8_t *buffer, uint8_t count) {
  * UARTReceive
  * Receive data over the hardware UART in the PRU.
  * Receives a max of count data elements.
- * Blocking call, waits for atleas count number of characters.
+ * Waits indefinitely for the first byte of data.
+ * Blocking call, waits for atleast count number of characters
+ * before a timeout occurs.
  * \param buffer  : pointer to the data buffer
  * \param count   : max number of bytes to be received
  * \param timeout : timeout in microseconds between characters
@@ -99,6 +101,9 @@ uint8_t UARTReceive(uint8_t *buffer, uint8_t count, uint32_t timeout) {
 
 	uint8_t cnt;
 	uint32_t time_cnt;
+
+	// Wait indefinitely for the first byte
+	while((CT_UART.LSR & 0x1) == 0x0){}
 
 	/* Let's send/receive some dummy data */
 	for (cnt = 0; cnt < count; cnt++) {

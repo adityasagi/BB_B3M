@@ -44,12 +44,13 @@
 #define TRUE 1
 #define FALSE 0
 
+
 uint8_t payload[RPMSG_BUF_SIZE];
 
 
 void main(void) {
 
-	uint8_t buffer[25];
+	uint8_t buffer[RPMSG_BUF_SIZE];
 	uint8_t recv_len;
 	uint8_t expect_reply;
 
@@ -61,18 +62,23 @@ void main(void) {
 
 	RPMsgInit(&transport);
 
+	initTimer(0x1E8480); // 10ms @ 200 MHz
+
+	startTimer();
+
 	/* Task loop */
 	while(1) {
 		if(RPMsgRecv(&transport, &src, &dst, payload, &len)==0) {
 
+			waitForTimeout();
 			UARTSend(payload, payload[0]); 
 			expect_reply = TRUE;
 			if(expect_reply){
-				recv_len = 0x05;
-				UARTReceive(buffer, recv_len, 3);
+				recv_len=UARTReceive(buffer, 0xFF, 3);
 				verify_response(payload,  buffer, recv_len);
-				RPMsgSend(&transport, dst, src, buffer, recv_len);
-				debug_lights(10);	
+				if(recv_len > 0)
+					RPMsgSend(&transport, dst, src, buffer, recv_len);
+				//debug_lights(recv_len);
 			}
 		}
 	}
